@@ -54,7 +54,7 @@ require("code/Systems/RoomFairness")
 --require("code/Systems/CustomUnlocks")
 --require("code/Systems/DelayedFunctions")
 --require("code/Systems/SpriteRender")
---require("code/Systems/TearProjectiles")
+require("code/Systems/TearProjectiles")
 require("code/Systems/CustomNPCs")
 
 --Eternal list
