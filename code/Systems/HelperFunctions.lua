@@ -240,12 +240,12 @@ end
 --better suited for enemies because that way knockback has an effect on the enemy
 function Content:calcEntVel(ent, target, speed)
 	if ent:HasEntityFlags(EntityFlag.FLAG_FEAR) then
-		return (ent.Velocity*0.8 + -(target.Position - ent.Position):Resized(speed * 3.5)*0.2)
+		return (ent.Velocity*0.8 + -(target - ent.Position):Resized(speed * 3.5)*0.2)
 	elseif ent:HasEntityFlags(EntityFlag.FLAG_CONFUSION) then
 		local rng = ent:GetDropRNG()
 		return (ent.Velocity*0.9 + Vector.FromAngle(rng:RandomInt(360)):Resized(speed * 3.5)*0.1)
 	else
-		return (ent.Velocity*0.8 + (target.Position - ent.Position):Resized(speed * 3.5)*0.2)
+		return (ent.Velocity*0.8 + (target - ent.Position):Resized(speed * 3.5)*0.2)
 	end
 end
 

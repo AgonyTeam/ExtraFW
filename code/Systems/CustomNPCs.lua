@@ -25,7 +25,7 @@ Content.Classes.AI = {
 		local ret = {}
 		for k,v in pairs(self) do
 			if type(v) == "table" then
-				v = self.clone(v)
+				v = Content.Classes.AI.clone(v)
 			end
 			ret[k] = v
 		end
@@ -159,7 +159,7 @@ Content.Classes.BasicWalkAI = Content.Classes.AI({
 						data.gridCountdown = data.gridCountdown - 1
 					end
 				else
-					ent.Velocity = Content:calcEntVel(ent, target, ai.speed)
+					ent.Velocity = Content:calcEntVel(ent, target.Position, ai.speed)
 				end 
 			end
 		end,
