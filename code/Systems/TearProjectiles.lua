@@ -141,6 +141,21 @@ function Content:fireHomingTearProj(var, sub, pos, vel, tearConf, overrideConf)
 	Content:fireTearProj(var, sub, pos, vel, tearConf)
 end
 
+function Content:fireMeatballTearProj(var, sub, pos, vel, tearConf, num, rng, overrideConf)
+	overrideConf = overrideConf or {}
+	for i=1, num do
+		local speed = vel:Length() * (1 + rng:RandomInt(8)/10)
+		local dir = Vector.FromAngle(rng:RandomInt(360))
+			
+		tearConf.FallingAcceleration = overrideConf.FallingAcceleration or 0.75
+		tearConf.FallingSpeed = overrideConf.FallingSpeed or (-10 - rng:RandomInt(13))
+		tearConf.Scale = overrideConf.Scale or 1
+		tearConf.Scale = tearConf.Scale * (1 + (rng:RandomInt(5)-2)/6)
+
+		Content:fireTearProj(var, sub, pos, dir * speed, tearConf)
+	end
+end
+
 function Content:getTearTable()
 	return tearTable
 end

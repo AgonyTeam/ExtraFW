@@ -182,7 +182,6 @@ Content.Classes.BasicWalkAI = Content.Classes.AI({
 
 
 function Content:addNPC(ai, type, var, sub)
-	ai = ai:clone()
 	if npcTree[type] == nil then
 		if var ~= nil then
     		npcTree[type] = {}
@@ -206,30 +205,36 @@ end
 
 function CustomNPCs:updateNPCs(ent)
 	local data = ent:GetData()
-	if data.Content == nil then
-		data.Content = {}
+	if data.ExtraFW == nil then
+		data.ExtraFW = {}
 	end
 
-	if ent.State == NpcState.STATE_INIT then
+	if ent.State == NpcState.STATE_INIT and data.ExtraFW.ai == nil then
 		local vars = npcTree[ent.Type]
 		if vars ~= nil and not vars.isAI then
 			local subs = vars[ent.Variant]
 			if subs ~= nil and not subs.isAI then
 				local ai = subs[ent.SubType]
-				ai.ent = ent
-				data.Content.ai = ai
+				if ai ~= nil then
+					ai = ai:clone()
+					ai.ent = ent
+					data.ExtraFW.ai = ai
+				end
 			elseif subs ~= nil and subs.isAI then
-				subs.ent = ent
-				data.Content.ai = subs
+				local ai = subs:clone()
+				ai.ent = ent
+				data.ExtraFW.ai = ai
 			end
 		elseif vars ~= nil and vars.isAI then
-			vars.ent = ent
-			data.Content.ai = vars
+			local ai = vars:clone()
+			ai.ent = ent
+			data.ExtraFW.ai = ai
 		end
 	end
 
-	local ai = data.Content.ai
-	if ai ~= nil and ai.isAI and ai.ent ~= nil and ai.ent.Type == ent.Type and ai.ent.Variant == ent.Variant and ai.ent.SubType == ent.SubType then
+	local ai = data.ExtraFW.ai
+	if ai ~= nil and ai.isAI then
+		ai.ent = ent
 		--debug_text = "ai detected"
 
 		local sprite = ent:GetSprite()
@@ -265,8 +270,8 @@ end
 
 function CustomNPCs:preNPCDmg(ent, dmg, dmgFlags, src, dmgCntDown)
 	local data = ent:GetData()
-	if data.Content ~= nil and data.Content.ai ~= nil and data.Content.ai.isAI and not ent:IsDead() then
-		local ai = data.Content.ai
+	if data.ExtraFW ~= nil and data.ExtraFW.ai ~= nil and data.ExtraFW.ai.isAI and not ent:IsDead() then
+		local ai = data.ExtraFW.ai
 		if ai.ent ~= nil and ai.ent.Type == ent.Type and ai.ent.Variant == ent.Variant and ai.ent.SubType == ent.SubType then
 			if ent.HitPoints < dmg and ai.preDeathFn ~= nil then
 				ai:preDeathFn(ent, dmg, dmgFlags, src, dmgCntDown, ai)

@@ -279,3 +279,20 @@ function Content:getItemNameFromID(id)
 		return "zero"
 	end
 end
+
+function Content:Spawn(t, v, s, p, vel, spEnt)
+	t = t or EntityType.ENTITY_GAPER
+	v = v or 0
+	s = s or 0
+	p = p or Game():GetRoom():GetCenterPos()
+	vel = vel or Vector(0,0)
+
+	local e = Isaac.Spawn(t, v, s, p, vel, spEnt)
+	if spEnt ~= nil then
+		e.SpawnerEntity = spEnt
+		e.SpawnerType = spEnt.Type
+		e.SpawnerVariant = spEnt.Variant
+	end
+
+	return e
+end
