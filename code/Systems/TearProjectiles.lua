@@ -13,6 +13,7 @@ function Content:TearConf()
 	t.Data = {}
 	t.Scale = 1 --goes in 1/6 steps for the bigger tearsprite
 	t.Functions = {} --supported functions are onDeath, onUpdate and onHit
+	t.DeathEffect = nil --e.g. {EntityType.ENTITY_GAPER, 0, 0}
 
 	return t
 end
@@ -21,25 +22,45 @@ function TearProj:updateTears()
 	for i, tearObj in pairs(tearTable) do
 		local tear = tearObj[1]
 		local func = tearObj[2]
+		local deathEnt = tearObj[3]
 
 		local player = Game():GetNearestPlayer(tear.Position)
 		local tData = tear:GetData()
 
 		if not tear:Exists() then
-			--run onDeath when the tear doesn't exist
-			if func ~= nil and func.onDeath ~= nil then
-				func:onDeath(tear.Position, tear.Velocity, tear.SpawnerEntity, tear)
-			end
 			tearTable[i] = nil
 		elseif player.Position:Distance(tear.Position) <= player.Size + tear.Size + 8 and tear.Height >= -30 then
-			player:TakeDamage(1, 0, EntityRef(tear), 0)
+			local ref
+			if tear.SpawnerEntity == nil then
+				ref = EntityRef(tear)
+			else
+				ref = EntityRef(tear.SpawnerEntity)
+			end
+			player:TakeDamage(1, 0, ref, 0)
 			--run onHit when tear hits the player
 			if func ~= nil and func.onHit ~= nil then
-				func:onHit(tear)
+				func.onHit(tear)
 			end
 			--don't remove the tear if piercing
 			if not Content:HasFlags(tear.TearFlags, TearFlags.TEAR_PIERCING) then
+				if deathEnt == nil then
+					tear:Die()
+				else
+					Content:Spawn(deathEnt[1], deathEnt[2], deathEnt[3], tear.Position, Vector(0,0), tear.SpawnerEntity) --spawn tear effect, if not default
+					tear:Remove()
+				end
+			end
+		elseif tear.Height > -5 then
+			--run onDeath when the tear hits the ground
+			if func ~= nil and func.onDeath ~= nil then
+				func.onDeath(tear)
+			end
+
+			if deathEnt == nil then
 				tear:Die()
+			else
+				Content:Spawn(deathEnt[1], deathEnt[2], deathEnt[3], tear.Position, Vector(0,0), tear.SpawnerEntity)
+				tear:Remove()
 			end
 		elseif tData.ExtraFW ~= nil and tData.ExtraFW.homing then
 			tear.Velocity = Content:calcTearVel(tear.Position, player.Position, tear.Velocity:Length())
@@ -47,7 +68,7 @@ function TearProj:updateTears()
 
 		--run onUpdate on every frame of existance
 		if tear:Exists() and func ~= nil and func.onUpdate ~= nil then
-			func:onUpdate(tear)
+			func.onUpdate(tear)
 		end
 	end
 end
@@ -59,12 +80,8 @@ end
 function Content:fireTearProj(var, sub, pos, vel, tearConf)
 	tearConf = tearConf or {}
 
-	local t = Isaac.Spawn(EntityType.ENTITY_TEAR, var, sub, pos, vel, tearConf.SpawnerEntity):ToTear()
-	t.SpawnerEntity = tearConf.SpawnerEntity
-	if tearConf.SpawnerEntity ~= nil then
-		t.SpawnerType = tearConf.SpawnerEntity.Type
-		t.SpawnerVariant = tearConf.SpawnerEntity.Variant
-	end
+	local t = Content:Spawn(EntityType.ENTITY_TEAR, var, sub, pos, vel, tearConf.SpawnerEntity):ToTear()
+
 	t.EntityCollisionClass = EntityCollisionClass.ENTCOLL_PLAYERONLY
 	t.TearFlags = tearConf.TearFlags or t.TearFlags
 	t.Height = tearConf.Height or -23
@@ -73,11 +90,17 @@ function Content:fireTearProj(var, sub, pos, vel, tearConf)
 	t.Color = tearConf.Color or t.Color
 	t.Scale = tearConf.Scale or 1
 
+	local tData = t:GetData()
+
 	if tearConf.Data ~= nil then
-		Content:dataCopy(tearConf.Data, t:GetData())
+		Content:dataCopy(tearConf.Data, tData)
 	end
 
-	table.insert(tearTable, {t, tearConf.Functions})
+	tData.ExtraFW = {
+		tearConf = tearConf
+	}
+
+	table.insert(tearTable, {t, tearConf.Functions, tearConf.DeathEffect})
 end
 
 function Content:fireMonstroTearProj(var, sub, pos, vel, tearConf, num, rng, overrideConf)

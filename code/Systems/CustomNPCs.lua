@@ -272,11 +272,12 @@ function CustomNPCs:preNPCDmg(ent, dmg, dmgFlags, src, dmgCntDown)
 	local data = ent:GetData()
 	if data.ExtraFW ~= nil and data.ExtraFW.ai ~= nil and data.ExtraFW.ai.isAI and not ent:IsDead() then
 		local ai = data.ExtraFW.ai
-		if ai.ent ~= nil and ai.ent.Type == ent.Type and ai.ent.Variant == ent.Variant and ai.ent.SubType == ent.SubType then
+		if ai.ent ~= nil then
 			if ent.HitPoints < dmg and ai.preDeathFn ~= nil then
-				ai:preDeathFn(ent, dmg, dmgFlags, src, dmgCntDown, ai)
-			elseif ai.preDmgFn ~= nil then
-				ai:preDmgFn(ent, dmg, dmgFlags, src, dmgCntDown, ai)
+				ai.preDeathFn(ent, dmg, dmgFlags, src, dmgCntDown, ai)
+			end
+			if ai.preDmgFn ~= nil then
+				ai.preDmgFn(ent, dmg, dmgFlags, src, dmgCntDown, ai)
 			end
 		end
 	end
